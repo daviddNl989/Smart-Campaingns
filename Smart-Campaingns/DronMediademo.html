@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DronMedia</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .logo-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .logo {
+            width: 150px;
+            height: 150px;
+        }
+
+        .logo-svg {
+            fill: #fff;
+            stroke: #3498db;
+            stroke-width: 2;
+        }
+
+        .banner {
+            background: #1a2b3c;
+            padding: 15px;
+            text-align: center;
+            margin: 20px 0;
+            transition: opacity 0.5s;
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .video-item {
+            position: relative;
+            padding-bottom: 56.25%;
+            cursor: pointer;
+        }
+
+        .video-item iframe {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .photo-item {
+            position: relative;
+            padding-bottom: 100%;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .photo-item img {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .update-btn {
+            display: none;
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 5px 10px;
+            background: #3498db;
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+
+        .add-video-btn {
+            display: block;
+            margin: 20px auto;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #3498db;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .upload-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #3498db;
+            text-align: center;
+        }
+
+        .social-links {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .social-links a {
+            color: #fff;
+            font-size: 24px;
+            margin: 0 10px;
+        }
+
+        .fullscreen {
+            grid-column: 1 / -1;
+            padding-bottom: 50%;
+            z-index: 1000;
+        }
+
+        @media (max-width: 768px) {
+            .video-grid, .photo-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo-container">
+            <svg class="logo" viewBox="0 0 100 100">
+                <circle class="logo-svg" cx="50" cy="50" r="45"/>
+                <path fill="black" d="M35,35 Q50,20 65,35 Q80,50 65,65 Q50,80 35,65 Q20,50 35,35 M45,45 L45,55 M55,45 L55,55"/>
+            </svg>
+        </div>
+
+        <p class="intro-text">Este es el sitio donde podrás dirigir tus videos especiales con increíble calidad y dinámico para sitios públicos, empresas y eventos especiales.</p>
+
+        <div class="banner" id="rotatingBanner"></div>
+
+        <div class="video-grid" id="videoContainer"></div>
+
+        <h2>Equipo de trabajo</h2>
+        <div class="photo-grid" id="photoGallery"></div>
+
+        <div class="course-info">
+            <h3>Tenemos cursos de vuelo y damos soporte de mantenimiento y armado de drones.</h3>
+        </div>
+
+        <div class="local-video">
+            <video controls width="100%">
+                <source src="videos/Demo_20250329_134946_0002.mp4" type="video/mp4">
+                Tu navegador no soporta el elemento de video.
+            </video>
+        </div>
+
+        <div class="upload-section">
+            <button class="add-video-btn" onclick="addVideoField()">+</button>
+            <div id="videoFields"></div>
+        </div>
+
+        <div class="social-links">
+            <a href="https://facebook.com" target="_blank"><i class="fab fa-facebook"></i></a>
+            <a href="https://instagram.com" target="_blank"><i class="fab fa-instagram"></i></a>
+            <a href="https://wa.me/3127439018" target="_blank"><i class="fab fa-whatsapp"></i></a>
+            <p>Teléfono: 3127439018</p>
+        </div>
+    </div>
+
+    <script>
+        const API_KEYS = ["AIzaSyCa-ZQ39BBeIFuYGMDTzNne01GONYVNbDY", 
+                        "AIzaSyC6Ezc9fByCQrwfyJgyCij9vMTCuC2L0l0", 
+                        "AIzaSyBvB66C8XumtHi2E2Akarke6lB6u45vsWs"];
+        
+        let currentKeyIndex = 0;
+        const videoIds = ['tIiZBrDTrKQ', 'AZJPI2STir0', 'R3kalECFIII', 'BLB6MIb0B3E'];
+        const bannerMessages = [
+            'Campañas para sumar clientes',
+            'Somos la mejor opción en videos dron',
+            'Videos musicales'
+        ];
+
+        const photos = [
+            'imagenes/Demo.jpg',
+            'https://th.bing.com/th/id/OIP.2XtlTWMVhr_X8Z3yaayYUgHaED?rs=1&pid=ImgDetMain',
+            'https://www.watersportswhiz.com/wp-content/uploads/2021/10/Depositphotos_122864266_L.jpg',
+            'https://th.bing.com/th/id/OIP.UFeMwcVGeTqC5GZFC5jALQHaKV?&w=160&h=240&c=7&pid=ImgDet',
+            'https://img.freepik.com/premium-photo/woman-eats-healthy-food-generative-ai_87561-15015.jpg',
+            'https://terrazas.casa/wp-content/uploads/2025/02/terrazas-de-madera-en-departamentos-pequenos-1.jpg',
+            'https://images.adsttc.com/media/images/59b0/0232/b22e/38f8/9500/0089/newsletter/AdCo_Parques.jpg?1504707119'
+        ];
+
+        // Funcionalidad de banners
+        let currentBannerIndex = 0;
+        function rotateBanner() {
+            document.getElementById('rotatingBanner').textContent = bannerMessages[currentBannerIndex];
+            currentBannerIndex = (currentBannerIndex + 1) % bannerMessages.length;
+        }
+
+        // Cargar videos de YouTube
+        function loadVideos() {
+            const container = document.getElementById('videoContainer');
+            videoIds.forEach(id => {
+                const videoItem = document.createElement('div');
+                videoItem.className = 'video-item';
+                videoItem.innerHTML = `
+                    <iframe src="https://www.youtube.com/embed/${id}?start=0&end=30&autoplay=0" 
+                            allow="accelerometer; autoplay; encrypted-media; gyroscope" 
+                            allowfullscreen></iframe>
+                `;
+                container.appendChild(videoItem);
+            });
+        }
+
+        // Galería de fotos con funcionalidad de actualización
+        function loadPhotos() {
+            const gallery = document.getElementById('photoGallery');
+            photos.forEach((src, index) => {
+                const container = document.createElement('div');
+                container.className = 'photo-item';
+                
+                const img = document.createElement('img');
+                img.src = src;
+                img.alt = `Foto ${index + 1}`;
+                
+                const updateBtn = document.createElement('button');
+                updateBtn.className = 'update-btn';
+                updateBtn.textContent = 'Actualizar';
+                updateBtn.onclick = () => updateImage(container);
+
+                container.appendChild(img);
+                container.appendChild(updateBtn);
+                
+                container.addEventListener('click', (e) => {
+                    if(e.target !== updateBtn) {
+                        updateBtn.style.display = 'block';
+                    }
+                });
+                
+                container.addEventListener('dblclick', () => {
+                    container.classList.toggle('fullscreen');
+                    updateBtn.style.display = 'none';
+                });
+
+                gallery.appendChild(container);
+            });
+        }
+
+        function updateImage(container) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if(file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        container.querySelector('img').src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            input.click();
+        }
+
+        // Sistema de subida de videos
+        function addVideoField() {
+            const container = document.getElementById('videoFields');
+            const newField = document.createElement('div');
+            newField.innerHTML = `
+                <input type="file" accept="video/mp4" style="margin: 10px">
+                <button onclick="uploadVideo(this)" style="padding: 5px 10px">Subir</button>
+            `;
+            container.appendChild(newField);
+        }
+
+        function uploadVideo(btn) {
+            const fileInput = btn.previousElementSibling;
+            if(fileInput.files.length > 0) {
+                // Lógica para subir el video
+                alert('Video subido exitosamente!');
+            }
+        }
+
+        // Inicialización
+        window.onload = () => {
+            loadVideos();
+            loadPhotos();
+            setInterval(rotateBanner, 15000);
+            rotateBanner();
+        };
+    </script>
+</body>
+</html>
